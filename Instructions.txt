@@ -1,0 +1,1370 @@
+Install TheThingBox 2.8
+Boot
+Open this webpage
+Connect to the digitalairways AP
+Walk through setup when done the device AP should disappear and you should connect back to your wireless
+Find the new device iP (I didn't have much luck with the name under Windows but your router should list the ip)
+SSH into the device - Username pi, password raspberry
+run sudo apt-get install libavahi-compat-libdnssd-dev
+Open a browser and go to http://IPAddress/
+When node-red opens select the hamburger in the upper right - select manage palette
+Select the install tab
+install node-red-contrib-homekit
+Install node-red-dashboard
+
+Copy each of the following flows and import via hamburger -> Import- Clipboard ->New Flow
+
+[
+    {
+        "id": "cb26229e.c0e5c",
+        "type": "tab",
+        "label": "Garage Door 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "80cb95f7.4d1d98",
+        "type": "homekit-service",
+        "z": "cb26229e.c0e5c",
+        "accessory": "8ab85370.45a79",
+        "name": "Door 1",
+        "serviceName": "GarageDoorOpener",
+        "x": 434.5,
+        "y": 66,
+        "wires": [
+            [
+                "af2147a5.0a8868"
+            ]
+        ]
+    },
+    {
+        "id": "af2147a5.0a8868",
+        "type": "switch",
+        "z": "cb26229e.c0e5c",
+        "name": "Ignore passthrough",
+        "property": "hap.context",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "nnull"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 2,
+        "x": 590,
+        "y": 160,
+        "wires": [
+            [
+                "94aa1dbf.310ae"
+            ],
+            []
+        ],
+        "outputLabels": [
+            "From Home",
+            ""
+        ]
+    },
+    {
+        "id": "30a40605.3efdda",
+        "type": "rpi-gpio out",
+        "z": "cb26229e.c0e5c",
+        "name": "Relay 1 (GPIO 6)",
+        "pin": "31",
+        "set": true,
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 765.2500076293945,
+        "y": 450.2500057220459,
+        "wires": []
+    },
+    {
+        "id": "e11d79bf.28ce78",
+        "type": "function",
+        "z": "cb26229e.c0e5c",
+        "name": "Inject 1",
+        "func": "msg.payload =  1;\nreturn msg; \n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 245,
+        "y": 508,
+        "wires": [
+            [
+                "8c8b8b8c.e26fa8"
+            ]
+        ]
+    },
+    {
+        "id": "1151d2bf.410ccd",
+        "type": "go",
+        "z": "cb26229e.c0e5c",
+        "name": "",
+        "x": 115,
+        "y": 508,
+        "wires": [
+            [
+                "e11d79bf.28ce78"
+            ]
+        ]
+    },
+    {
+        "id": "8c8b8b8c.e26fa8",
+        "type": "ui_button",
+        "z": "cb26229e.c0e5c",
+        "name": "Open/Close Button (Door 1)",
+        "group": "d2c35031.58c54",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "label": "Open/Close",
+        "color": "",
+        "bgcolor": "",
+        "icon": "vertical_align_center",
+        "payload": "1",
+        "payloadType": "num",
+        "topic": "",
+        "x": 440,
+        "y": 460,
+        "wires": [
+            [
+                "30a40605.3efdda",
+                "d3561f5c.140f3",
+                "519837b4.28a8d8"
+            ]
+        ]
+    },
+    {
+        "id": "3cd6f678.4612ba",
+        "type": "function",
+        "z": "cb26229e.c0e5c",
+        "name": "Build HomeKit Characteristics",
+        "func": "if (msg.payload == 1) \n{    msg.payload = {\"CurrentDoorState\": 0, \"TargetDoorState\": 0}}\nelse\n{    msg.payload = {\"CurrentDoorState\": 1, \"TargetDoorState\": 1}}\nreturn msg; \n\n//Apple - Open is 0 Closed in 1\n//Sensor - Open is 0 Closed in 1",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 167,
+        "y": 66,
+        "wires": [
+            [
+                "80cb95f7.4d1d98"
+            ]
+        ]
+    },
+    {
+        "id": "94aa1dbf.310ae",
+        "type": "switch",
+        "z": "cb26229e.c0e5c",
+        "name": "Open or Shut",
+        "property": "payload.TargetDoorState",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "outputs": 2,
+        "x": 790,
+        "y": 80,
+        "wires": [
+            [
+                "e11d79bf.28ce78"
+            ],
+            [
+                "e11d79bf.28ce78"
+            ]
+        ],
+        "outputLabels": [
+            "0 = Open",
+            "1= Shut"
+        ]
+    },
+    {
+        "id": "d3561f5c.140f3",
+        "type": "delay",
+        "z": "cb26229e.c0e5c",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 767.5000228881836,
+        "y": 498.2500228881836,
+        "wires": [
+            [
+                "2c3be668.5fb7fa"
+            ]
+        ]
+    },
+    {
+        "id": "2c3be668.5fb7fa",
+        "type": "function",
+        "z": "cb26229e.c0e5c",
+        "name": "Inject 0",
+        "func": "msg.payload =  0;\nreturn msg; \n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 776.2500190734863,
+        "y": 549.5000257492065,
+        "wires": [
+            [
+                "30a40605.3efdda"
+            ]
+        ]
+    },
+    {
+        "id": "4ac61fde.4df44",
+        "type": "rpi-gpio in",
+        "z": "cb26229e.c0e5c",
+        "name": "Door 1 (GPIO 05)",
+        "pin": "35",
+        "intype": "down",
+        "debounce": "1000",
+        "read": true,
+        "x": 86.75,
+        "y": 381.7500042915344,
+        "wires": [
+            [
+                "2643220e.82382e",
+                "3cd6f678.4612ba",
+                "bd009c91.c1734",
+                "2f9e7adb.b2bd86"
+            ]
+        ]
+    },
+    {
+        "id": "2643220e.82382e",
+        "type": "switch",
+        "z": "cb26229e.c0e5c",
+        "name": "Lock or Unlock",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "outputs": 2,
+        "x": 527.678596496582,
+        "y": 329.464298248291,
+        "wires": [
+            [
+                "62218ff0.cd483",
+                "2b5b9a53.bbd4f6"
+            ],
+            [
+                "b13472d7.d78f",
+                "2b5b9a53.bbd4f6"
+            ]
+        ],
+        "outputLabels": [
+            "0 = Open",
+            "1= Shut"
+        ]
+    },
+    {
+        "id": "62218ff0.cd483",
+        "type": "set",
+        "z": "cb26229e.c0e5c",
+        "property": "payload",
+        "value": "Garage Door one, has Opened",
+        "name": "Open Text",
+        "x": 701.785717010498,
+        "y": 288.7500047683716,
+        "wires": [
+            [
+                "f980795b.eacd58",
+                "733f9b64.b88d14",
+                "d5711b74.343898"
+            ]
+        ]
+    },
+    {
+        "id": "b13472d7.d78f",
+        "type": "set",
+        "z": "cb26229e.c0e5c",
+        "property": "payload",
+        "value": "Garage Door One, has Closed.",
+        "name": "Close Text",
+        "x": 701.2500686645508,
+        "y": 339.46430015563965,
+        "wires": [
+            [
+                "f980795b.eacd58",
+                "733f9b64.b88d14",
+                "889c8f2f.8942"
+            ]
+        ]
+    },
+    {
+        "id": "f980795b.eacd58",
+        "type": "ui_audio",
+        "z": "cb26229e.c0e5c",
+        "name": "",
+        "group": "d6aca550.479298",
+        "voice": "en-US",
+        "always": "",
+        "x": 901.8572235107422,
+        "y": 272.14287090301514,
+        "wires": []
+    },
+    {
+        "id": "733f9b64.b88d14",
+        "type": "ui_toast",
+        "z": "cb26229e.c0e5c",
+        "position": "top right",
+        "displayTime": "3",
+        "highlight": "",
+        "outputs": 0,
+        "ok": "OK",
+        "cancel": "",
+        "topic": "Status Change",
+        "name": "",
+        "x": 928.3928985595703,
+        "y": 305.17859268188477,
+        "wires": []
+    },
+    {
+        "id": "d0c4b928.8d0028",
+        "type": "ui_chart",
+        "z": "cb26229e.c0e5c",
+        "name": "Graph (Door 1)",
+        "group": "5c356051.16de5",
+        "order": 1,
+        "width": "10",
+        "height": "5",
+        "label": "History",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": true,
+        "ymin": "0",
+        "ymax": "2",
+        "removeOlder": "12",
+        "removeOlderPoints": "100",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "useOldStyle": false,
+        "x": 378.7500686645508,
+        "y": 196.17858791351318,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "a85c44a2.dbc988",
+        "type": "function",
+        "z": "cb26229e.c0e5c",
+        "name": "Add to Dashboard Log1",
+        "func": "// initialise the counter to 0 if it doesn't exist already\nvar dashboardLog1 = flow.get('dashboardLog1')|| [];\n\ndashboardLog1.unshift(msg);\nif (dashboardLog1.length > 20){\n    // Delete oldest message if &gt; 20\n    dashboardLog1.pop();\n    dashboardLog1.length = 20;\n} \n\n// store the value back\nflow.set('dashboardLog1',dashboardLog1);\n\n// make it part of the outgoing msg object\nmsg = {};\nmsg.payload = dashboardLog1;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 675.5000076293945,
+        "y": 640.2500715255737,
+        "wires": [
+            [
+                "d2a15120.87804"
+            ]
+        ]
+    },
+    {
+        "id": "d2a15120.87804",
+        "type": "ui_template",
+        "z": "cb26229e.c0e5c",
+        "group": "d9c1cf3b.4e3b5",
+        "name": "Log Widget (Door 1)",
+        "order": 1,
+        "width": "10",
+        "height": "5",
+        "format": " <h3 align=\"center\">Log</h3>\n <br>\n <li ng-repeat=\"x in msg.payload\">\n     <font size=\"3\">{{x.payload}}</font>\n </li>",
+        "storeOutMessages": false,
+        "fwdInMessages": true,
+        "templateScope": "local",
+        "x": 1162.500015258789,
+        "y": 696.500036239624,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "519837b4.28a8d8",
+        "type": "function",
+        "z": "cb26229e.c0e5c",
+        "name": "Add Log Text",
+        "func": "if (msg.hap){\n   if (msg.hap.newValue === 0)\n   {\n        msg.payload = new Date().toLocaleString(\"en-US\", {timeZone: \"America/Chicago\"}) + \": OPEN triggered from Apple\" \n   }else{\n        msg.payload = new Date().toLocaleString(\"en-US\", {timeZone: \"America/Chicago\"}) + \": CLOSE triggered from Apple\" \n   }\n}\nelse\n{\n    msg.payload = new Date().toLocaleString(\"en-US\", {timeZone: \"America/Chicago\"}) + \": OPEN/CLOSE triggered from Page\" \n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 459.50006103515625,
+        "y": 637.5000534057617,
+        "wires": [
+            [
+                "a85c44a2.dbc988"
+            ]
+        ]
+    },
+    {
+        "id": "ede399ca.af05c8",
+        "type": "go",
+        "z": "cb26229e.c0e5c",
+        "name": "Clear Log",
+        "x": 118,
+        "y": 616,
+        "wires": [
+            [
+                "db85197f.8972b8"
+            ]
+        ]
+    },
+    {
+        "id": "db85197f.8972b8",
+        "type": "function",
+        "z": "cb26229e.c0e5c",
+        "name": "Add to Dashboard Log1",
+        "func": "// initialise the counter to 0 if it doesn't exist already\nvar dashboardLog1 = flow.get('dashboardLog1')||[];\ndashboardLog1.length=0;\ndashboardLog1 = [];\nflow.set('dashboardLog1',dashboardLog1);\nmsg = {};\nvar dashboardLog1 = flow.get('dashboardLog1')||[];\nmsg.payload = dashboardLog1;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 282,
+        "y": 681,
+        "wires": [
+            [
+                "d2a15120.87804"
+            ]
+        ]
+    },
+    {
+        "id": "1c89d01b.c7bc6",
+        "type": "function",
+        "z": "cb26229e.c0e5c",
+        "name": "Add to Dashboard Log1",
+        "func": "// initialise the counter to 0 if it doesn't exist already\nvar dashboardLog1 = flow.get('dashboardLog1')|| [];\n\ndashboardLog1.unshift(msg);\nif (dashboardLog1.length > 20){\n    // Delete oldest message if &gt; 20\n    dashboardLog1.pop();\n    dashboardLog1.length = 20;\n} \n\n// store the value back\nflow.set('dashboardLog1',dashboardLog1);\n\n// make it part of the outgoing msg object\nmsg = {};\nmsg.payload = dashboardLog1;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 875.0000114440918,
+        "y": 386.2500057220459,
+        "wires": [
+            [
+                "d2a15120.87804"
+            ]
+        ]
+    },
+    {
+        "id": "2b5b9a53.bbd4f6",
+        "type": "function",
+        "z": "cb26229e.c0e5c",
+        "name": "Add Log Text",
+        "func": "\nif (msg.payload === 0)\n{\n    msg.payload = new Date().toLocaleString(\"en-US\", {timeZone: \"America/Chicago\"}) + \": Garage door now OPEN\" \n}else{\n    msg.payload = new Date().toLocaleString(\"en-US\", {timeZone: \"America/Chicago\"}) + \": Garage door now CLOSED\" \n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 673.7500114440918,
+        "y": 386.2500057220459,
+        "wires": [
+            [
+                "1c89d01b.c7bc6"
+            ]
+        ]
+    },
+    {
+        "id": "8c74924a.6ded5",
+        "type": "trigger",
+        "z": "cb26229e.c0e5c",
+        "op1": "",
+        "op2": "",
+        "op1type": "pay",
+        "op2type": "pay",
+        "duration": "-1",
+        "extend": false,
+        "units": "min",
+        "reset": "",
+        "name": "",
+        "x": 274.89459228515625,
+        "y": 250.88679027557373,
+        "wires": [
+            [
+                "d0c4b928.8d0028",
+                "a6782ca5.4a23a"
+            ]
+        ]
+    },
+    {
+        "id": "a6782ca5.4a23a",
+        "type": "debug",
+        "z": "cb26229e.c0e5c",
+        "name": "",
+        "active": true,
+        "console": "false",
+        "complete": "false",
+        "x": 520.5118446350098,
+        "y": 243.3516035079956,
+        "wires": []
+    },
+    {
+        "id": "bd009c91.c1734",
+        "type": "function",
+        "z": "cb26229e.c0e5c",
+        "name": "Invert Result",
+        "func": "node.log(\"Initial Value:\");\nnode.log(msg.payload);\nif (msg.payload==1) {msg.payload=0}\nelse {msg.payload=1}\nnode.log(\"New Value:\");\nnode.log(msg.payload);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 240.01953125,
+        "y": 323.00393295288086,
+        "wires": [
+            [
+                "8c74924a.6ded5"
+            ]
+        ]
+    },
+    {
+        "id": "d5711b74.343898",
+        "type": "set",
+        "z": "cb26229e.c0e5c",
+        "property": "payload",
+        "value": "https://github.com/lawrence-jeff/OpenGarage-Firmware/blob/master/OpenGarage/examples/ogMainArduino/data/DoorOpen.png?raw=true",
+        "name": "Set Graphic to Open",
+        "x": 931.01953125,
+        "y": 209.00390625,
+        "wires": [
+            [
+                "22b2bf27.8aca5"
+            ]
+        ]
+    },
+    {
+        "id": "889c8f2f.8942",
+        "type": "set",
+        "z": "cb26229e.c0e5c",
+        "property": "payload",
+        "value": "https://github.com/lawrence-jeff/OpenGarage-Firmware/blob/master/OpenGarage/examples/ogMainArduino/data/DoorShut.png?raw=true",
+        "name": "Set Graphic to Closed",
+        "x": 935.0194702148438,
+        "y": 344.003933429718,
+        "wires": [
+            [
+                "22b2bf27.8aca5"
+            ]
+        ]
+    },
+    {
+        "id": "22b2bf27.8aca5",
+        "type": "ui_template",
+        "z": "cb26229e.c0e5c",
+        "group": "d2c35031.58c54",
+        "name": "Set Graphic Image (Door 1)",
+        "order": 1,
+        "width": "5",
+        "height": "4",
+        "format": "<img src=\"{{msg.payload}}\" alt=\"Flowers in Chania\">",
+        "storeOutMessages": false,
+        "fwdInMessages": false,
+        "templateScope": "local",
+        "x": 1120.019546508789,
+        "y": 249.00391006469727,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2f9e7adb.b2bd86",
+        "type": "ui_text",
+        "z": "cb26229e.c0e5c",
+        "group": "6d325ab.5dedba4",
+        "order": 1,
+        "width": "3",
+        "height": "5",
+        "name": "Door Title (Door 1)",
+        "label": "Garage Door 1:",
+        "format": "",
+        "layout": "row-left",
+        "x": 151.2744140625,
+        "y": 131.2548828125,
+        "wires": []
+    },
+    {
+        "id": "8ab85370.45a79",
+        "type": "homekit-accessory",
+        "z": "",
+        "accessoryName": "Door 1",
+        "pinCode": "111-11-111",
+        "port": "",
+        "manufacturer": "JeffCo",
+        "model": "Default Model",
+        "serialNo": "1",
+        "accessoryType": "4"
+    },
+    {
+        "id": "d2c35031.58c54",
+        "type": "ui_group",
+        "z": "",
+        "name": "Status Column",
+        "tab": "e2e13ec.547fec",
+        "order": 2,
+        "disp": false,
+        "width": "5"
+    },
+    {
+        "id": "d6aca550.479298",
+        "type": "ui_group",
+        "z": "",
+        "name": "Hidden Items",
+        "tab": "e2e13ec.547fec",
+        "order": 5,
+        "disp": true,
+        "width": "6"
+    },
+    {
+        "id": "5c356051.16de5",
+        "type": "ui_group",
+        "z": "",
+        "name": "Graph Column",
+        "tab": "e2e13ec.547fec",
+        "order": 3,
+        "disp": false,
+        "width": "10"
+    },
+    {
+        "id": "d9c1cf3b.4e3b5",
+        "type": "ui_group",
+        "z": "",
+        "name": "Log Column",
+        "tab": "e2e13ec.547fec",
+        "order": 4,
+        "disp": false,
+        "width": "10"
+    },
+    {
+        "id": "6d325ab.5dedba4",
+        "type": "ui_group",
+        "z": "",
+        "name": "Title Column",
+        "tab": "e2e13ec.547fec",
+        "order": 1,
+        "disp": false,
+        "width": "3"
+    },
+    {
+        "id": "e2e13ec.547fec",
+        "type": "ui_tab",
+        "z": "",
+        "name": "Garage Door Status",
+        "icon": "dashboard"
+    }
+]
+
+
+
+Garage Door 2
+
+[
+    {
+        "id": "f23c24eb.bc3608",
+        "type": "tab",
+        "label": "Garage Door 2",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "cc0375d6.d18f28",
+        "type": "function",
+        "z": "f23c24eb.bc3608",
+        "name": "Build HomeKit Characteristics",
+        "func": "if (msg.payload == 1) \n{    msg.payload = {\"CurrentDoorState\": 1, \"TargetDoorState\": 1}}\nelse\n{    msg.payload = {\"CurrentDoorState\": 0, \"TargetDoorState\": 0}}\nreturn msg; \n\n//Apple - Open is 0 Closed in 1\n//Sensor - Open is 0 Closed in 1",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 188.57142639160156,
+        "y": 91.42857360839844,
+        "wires": [
+            [
+                "b4ab6883.c95b88",
+                "c29e9a5d.2be698"
+            ]
+        ]
+    },
+    {
+        "id": "b4ab6883.c95b88",
+        "type": "homekit-service",
+        "z": "f23c24eb.bc3608",
+        "accessory": "50add05.90af53",
+        "name": "Door 2",
+        "serviceName": "GarageDoorOpener",
+        "x": 456.07142639160156,
+        "y": 91.42857360839844,
+        "wires": [
+            [
+                "8885e0a9.aad77"
+            ]
+        ]
+    },
+    {
+        "id": "24461478.c7214c",
+        "type": "rpi-gpio in",
+        "z": "f23c24eb.bc3608",
+        "name": "Door 2 (GPIO 13)",
+        "pin": "33",
+        "intype": "down",
+        "debounce": "1000",
+        "read": true,
+        "x": 85,
+        "y": 327.5714416503906,
+        "wires": [
+            [
+                "221820b8.54531",
+                "cc0375d6.d18f28",
+                "f32e49e7.d62de8",
+                "58bf1258.5d7e7c"
+            ]
+        ]
+    },
+    {
+        "id": "8885e0a9.aad77",
+        "type": "switch",
+        "z": "f23c24eb.bc3608",
+        "name": "Ignore passthrough",
+        "property": "hap.context",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "nnull"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "outputs": 2,
+        "x": 718.0000381469727,
+        "y": 92.85714912414551,
+        "wires": [
+            [
+                "e2f72358.4eaf7"
+            ],
+            []
+        ],
+        "outputLabels": [
+            "From Home",
+            ""
+        ]
+    },
+    {
+        "id": "6ddbdc05.503a64",
+        "type": "ui_button",
+        "z": "f23c24eb.bc3608",
+        "name": "Open/Close Button (Door 2)",
+        "group": "d2c35031.58c54",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "label": "Open/Close",
+        "color": "",
+        "bgcolor": "",
+        "icon": "vertical_align_center",
+        "payload": "1",
+        "payloadType": "num",
+        "topic": "",
+        "x": 478.5714874267578,
+        "y": 492.9285955429077,
+        "wires": [
+            [
+                "f6525521.55aa28",
+                "269a08ea.cac308",
+                "bc5b0234.37e84"
+            ]
+        ]
+    },
+    {
+        "id": "fcc3cdaf.6b8b8",
+        "type": "function",
+        "z": "f23c24eb.bc3608",
+        "name": "Inject 1",
+        "func": "msg.payload =  1;\nreturn msg; \n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 266.57142639160156,
+        "y": 533.4285736083984,
+        "wires": [
+            [
+                "6ddbdc05.503a64"
+            ]
+        ]
+    },
+    {
+        "id": "1f0508ea.632ef7",
+        "type": "go",
+        "z": "f23c24eb.bc3608",
+        "name": "",
+        "x": 136.57142639160156,
+        "y": 533.4285736083984,
+        "wires": [
+            [
+                "fcc3cdaf.6b8b8"
+            ]
+        ]
+    },
+    {
+        "id": "f6525521.55aa28",
+        "type": "rpi-gpio out",
+        "z": "f23c24eb.bc3608",
+        "name": "Relay 2 (GPIO 11)",
+        "pin": "11",
+        "set": true,
+        "level": "0",
+        "freq": "",
+        "out": "out",
+        "x": 808.9644088745117,
+        "y": 503.71435546875,
+        "wires": []
+    },
+    {
+        "id": "269a08ea.cac308",
+        "type": "delay",
+        "z": "f23c24eb.bc3608",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "2",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "x": 802.8215255737305,
+        "y": 548.6786041259766,
+        "wires": [
+            [
+                "69162a72.38d994"
+            ]
+        ]
+    },
+    {
+        "id": "69162a72.38d994",
+        "type": "function",
+        "z": "f23c24eb.bc3608",
+        "name": "Inject 0",
+        "func": "msg.payload =  0;\nreturn msg; \n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 794.0714492797852,
+        "y": 595.4643049240112,
+        "wires": [
+            [
+                "f6525521.55aa28"
+            ]
+        ]
+    },
+    {
+        "id": "1fefa1c1.2800ae",
+        "type": "ui_audio",
+        "z": "f23c24eb.bc3608",
+        "name": "",
+        "group": "d6aca550.479298",
+        "voice": "en-US",
+        "always": "",
+        "x": 855.0000114440918,
+        "y": 260.53574085235596,
+        "wires": []
+    },
+    {
+        "id": "221820b8.54531",
+        "type": "switch",
+        "z": "f23c24eb.bc3608",
+        "name": "Lock or Unlock",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "outputs": 2,
+        "x": 312.5714340209961,
+        "y": 342.35715675354004,
+        "wires": [
+            [
+                "7f4d890c.21d318",
+                "5f8404a0.bdcf3c"
+            ],
+            [
+                "bdd32f36.c6b59",
+                "5f8404a0.bdcf3c"
+            ]
+        ],
+        "outputLabels": [
+            "0 = Open",
+            "1= Shut"
+        ]
+    },
+    {
+        "id": "7f4d890c.21d318",
+        "type": "set",
+        "z": "f23c24eb.bc3608",
+        "property": "payload",
+        "value": "Garage Door 2, has Opened.",
+        "name": "Open Text",
+        "x": 656.4285354614258,
+        "y": 327.142858505249,
+        "wires": [
+            [
+                "1fefa1c1.2800ae",
+                "9e0f933b.598fc",
+                "8fc4d0af.f1f47"
+            ]
+        ]
+    },
+    {
+        "id": "bdd32f36.c6b59",
+        "type": "set",
+        "z": "f23c24eb.bc3608",
+        "property": "payload",
+        "value": "Garage Door 2, has Closed",
+        "name": "Close Text",
+        "x": 657.142894744873,
+        "y": 371.6071529388428,
+        "wires": [
+            [
+                "1fefa1c1.2800ae",
+                "9e0f933b.598fc",
+                "aa359d8a.6afbf"
+            ]
+        ]
+    },
+    {
+        "id": "9e0f933b.598fc",
+        "type": "ui_toast",
+        "z": "f23c24eb.bc3608",
+        "position": "top right",
+        "displayTime": "3",
+        "highlight": "",
+        "outputs": 0,
+        "ok": "OK",
+        "cancel": "",
+        "topic": "Status Change",
+        "name": "",
+        "x": 884.2857208251953,
+        "y": 300.71430015563965,
+        "wires": []
+    },
+    {
+        "id": "4968a616.d69e28",
+        "type": "ui_chart",
+        "z": "f23c24eb.bc3608",
+        "name": "Graph (Door 2)",
+        "group": "5c356051.16de5",
+        "order": 2,
+        "width": "10",
+        "height": "5",
+        "label": "History",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": true,
+        "ymin": "0",
+        "ymax": "2",
+        "removeOlder": "12",
+        "removeOlderPoints": "100",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "useOldStyle": false,
+        "x": 509.7500534057617,
+        "y": 276.03575706481934,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "56ef8431.9b4d7c",
+        "type": "function",
+        "z": "f23c24eb.bc3608",
+        "name": "Add to Dashboard Log2",
+        "func": "// initialise the counter to 0 if it doesn't exist already\nvar dashboardLog2 = flow.get('dashboardLog2')|| [];\n\ndashboardLog2.unshift(msg);\nif (dashboardLog2.length > 20){\n    // Delete oldest message if &gt; 20\n    dashboardLog2.pop();\n    dashboardLog2.length = 20;\n} \n\n// store the value back\nflow.set('dashboardLog2',dashboardLog2);\n\n// make it part of the outgoing msg object\nmsg = {};\nmsg.payload = dashboardLog2;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 884.0000381469727,
+        "y": 689.2500514984131,
+        "wires": [
+            [
+                "24821f3b.70c05"
+            ]
+        ]
+    },
+    {
+        "id": "24821f3b.70c05",
+        "type": "ui_template",
+        "z": "f23c24eb.bc3608",
+        "group": "d9c1cf3b.4e3b5",
+        "name": "Log Widget (Door 2)",
+        "order": 2,
+        "width": "10",
+        "height": "5",
+        "format": " <h3 align=\"center\">Log</h3>\n <br>\n <li ng-repeat=\"x in msg.payload\">\n     <font size=\"3\">{{x.payload}}</font>\n </li>",
+        "storeOutMessages": false,
+        "fwdInMessages": true,
+        "templateScope": "local",
+        "x": 1263.7500228881836,
+        "y": 742.500020980835,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "bc5b0234.37e84",
+        "type": "function",
+        "z": "f23c24eb.bc3608",
+        "name": "Add Log Text",
+        "func": "if (msg.hap){\n   if (msg.hap.newValue == 0)\n   {\n        msg.payload = new Date().toLocaleString(\"en-US\", {timeZone: \"America/Chicago\"}) + \": OPEN triggered from Apple\" \n   }else{\n        msg.payload = new Date().toLocaleString(\"en-US\", {timeZone: \"America/Chicago\"}) + \": CLOSE triggered from Apple\" \n   }\n}\nelse\n{\n    msg.payload = new Date().toLocaleString(\"en-US\", {timeZone: \"America/Chicago\"}) + \": OPEN/CLOSE triggered from Page\" \n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 600.2500305175781,
+        "y": 649.7500400543213,
+        "wires": [
+            [
+                "56ef8431.9b4d7c"
+            ]
+        ]
+    },
+    {
+        "id": "ea90a602.aef2a8",
+        "type": "go",
+        "z": "f23c24eb.bc3608",
+        "name": "Clear Log",
+        "x": 157.25000762939453,
+        "y": 741.5000381469727,
+        "wires": [
+            [
+                "456be13.1f7c92"
+            ]
+        ]
+    },
+    {
+        "id": "456be13.1f7c92",
+        "type": "function",
+        "z": "f23c24eb.bc3608",
+        "name": "Add to Dashboard Log1",
+        "func": "// initialise the counter to 0 if it doesn't exist already\nvar dashboardLog2 = flow.get('dashboardLog2')||[];\ndashboardLog2.length=0;\ndashboardLog2 = [];\nflow.set('dashboardLog2',dashboardLog2);\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 413.0000228881836,
+        "y": 741.5000381469727,
+        "wires": [
+            [
+                "24821f3b.70c05"
+            ]
+        ]
+    },
+    {
+        "id": "5f8404a0.bdcf3c",
+        "type": "function",
+        "z": "f23c24eb.bc3608",
+        "name": "Add Log Text",
+        "func": "\nif (msg.payload === 0)\n{\n    msg.payload = new Date().toLocaleString(\"en-US\", {timeZone: \"America/Chicago\"}) + \": Garage door now OPEN\" \n}else{\n    msg.payload = new Date().toLocaleString(\"en-US\", {timeZone: \"America/Chicago\"}) + \": Garage door now CLOSED\" \n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 658.75,
+        "y": 418.75,
+        "wires": [
+            [
+                "460c046a.e5be1c"
+            ]
+        ]
+    },
+    {
+        "id": "460c046a.e5be1c",
+        "type": "function",
+        "z": "f23c24eb.bc3608",
+        "name": "Add to Dashboard Log2",
+        "func": "// initialise the counter to 0 if it doesn't exist already\nvar dashboardLog2 = flow.get('dashboardLog2')|| [];\n\ndashboardLog2.unshift(msg);\nif (dashboardLog2.length > 20){\n    // Delete oldest message if &gt; 20\n    dashboardLog2.pop();\n    dashboardLog2.length = 20;\n} \n\n// store the value back\nflow.set('dashboardLog2',dashboardLog2);\n\n// make it part of the outgoing msg object\nmsg = {};\nmsg.payload = dashboardLog2;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 860,
+        "y": 418.75,
+        "wires": [
+            [
+                "24821f3b.70c05"
+            ]
+        ]
+    },
+    {
+        "id": "f32e49e7.d62de8",
+        "type": "ui_text",
+        "z": "f23c24eb.bc3608",
+        "group": "6d325ab.5dedba4",
+        "order": 3,
+        "width": "3",
+        "height": "5",
+        "name": "Door Title (Door 2)",
+        "label": "Garage Door 2:",
+        "format": "",
+        "layout": "row-left",
+        "x": 208.7744140625,
+        "y": 156.2548828125,
+        "wires": []
+    },
+    {
+        "id": "7f74d5c7.5afd7c",
+        "type": "trigger",
+        "z": "f23c24eb.bc3608",
+        "op1": "",
+        "op2": "",
+        "op1type": "pay",
+        "op2type": "pay",
+        "duration": "-1",
+        "extend": false,
+        "units": "min",
+        "reset": "",
+        "name": "",
+        "x": 350.0195617675781,
+        "y": 241.00395584106445,
+        "wires": [
+            [
+                "4968a616.d69e28"
+            ]
+        ]
+    },
+    {
+        "id": "a3cafd09.d95b1",
+        "type": "ui_template",
+        "z": "f23c24eb.bc3608",
+        "group": "d2c35031.58c54",
+        "name": "Set Graphic Image (Door 2)",
+        "order": 3,
+        "width": "5",
+        "height": "4",
+        "format": "<img src=\"{{msg.payload}}\" alt=\"Flowers in Chania\">",
+        "storeOutMessages": false,
+        "fwdInMessages": false,
+        "templateScope": "local",
+        "x": 1180,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "58bf1258.5d7e7c",
+        "type": "function",
+        "z": "f23c24eb.bc3608",
+        "name": "Invert Result",
+        "func": "if (msg.payload==1) {msg.payload=0}\nelse {msg.payload=1}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 257.0195426940918,
+        "y": 286.0039119720459,
+        "wires": [
+            [
+                "7f74d5c7.5afd7c"
+            ]
+        ]
+    },
+    {
+        "id": "8fc4d0af.f1f47",
+        "type": "set",
+        "z": "f23c24eb.bc3608",
+        "property": "payload",
+        "value": "https://github.com/lawrence-jeff/OpenGarage-Firmware/blob/master/OpenGarage/examples/ogMainArduino/data/DoorOpen.png?raw=true",
+        "name": "Set Graphic to Open",
+        "x": 888.0195770263672,
+        "y": 220.00391387939453,
+        "wires": [
+            [
+                "a3cafd09.d95b1"
+            ]
+        ]
+    },
+    {
+        "id": "aa359d8a.6afbf",
+        "type": "set",
+        "z": "f23c24eb.bc3608",
+        "property": "payload",
+        "value": "https://github.com/lawrence-jeff/OpenGarage-Firmware/blob/master/OpenGarage/examples/ogMainArduino/data/DoorShut.png?raw=true",
+        "name": "Set Graphic to Closed",
+        "x": 897.01953125,
+        "y": 366.00390625,
+        "wires": [
+            [
+                "a3cafd09.d95b1"
+            ]
+        ]
+    },
+    {
+        "id": "e2f72358.4eaf7",
+        "type": "switch",
+        "z": "f23c24eb.bc3608",
+        "name": "Lock or Unlock",
+        "property": "payload.TargetDoorState",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "1",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "outputs": 2,
+        "x": 937.8214569091797,
+        "y": 88.9285888671875,
+        "wires": [
+            [
+                "fcc3cdaf.6b8b8"
+            ],
+            [
+                "fcc3cdaf.6b8b8"
+            ]
+        ],
+        "outputLabels": [
+            "0 = Open",
+            "1= Shut"
+        ]
+    },
+    {
+        "id": "c29e9a5d.2be698",
+        "type": "debug",
+        "z": "f23c24eb.bc3608",
+        "name": "",
+        "active": true,
+        "console": "false",
+        "complete": "false",
+        "x": 589.3051147460938,
+        "y": 181.23376028878346,
+        "wires": []
+    },
+    {
+        "id": "50add05.90af53",
+        "type": "homekit-accessory",
+        "z": "",
+        "accessoryName": "Door 2",
+        "pinCode": "111-11-111",
+        "port": "",
+        "manufacturer": "JeffCo",
+        "model": "Default Model",
+        "serialNo": "2",
+        "accessoryType": "4"
+    },
+    {
+        "id": "d2c35031.58c54",
+        "type": "ui_group",
+        "z": "",
+        "name": "Status Column",
+        "tab": "e2e13ec.547fec",
+        "order": 2,
+        "disp": false,
+        "width": "5"
+    },
+    {
+        "id": "d6aca550.479298",
+        "type": "ui_group",
+        "z": "",
+        "name": "Hidden Items",
+        "tab": "e2e13ec.547fec",
+        "order": 5,
+        "disp": true,
+        "width": "6"
+    },
+    {
+        "id": "5c356051.16de5",
+        "type": "ui_group",
+        "z": "",
+        "name": "Graph Column",
+        "tab": "e2e13ec.547fec",
+        "order": 3,
+        "disp": false,
+        "width": "10"
+    },
+    {
+        "id": "d9c1cf3b.4e3b5",
+        "type": "ui_group",
+        "z": "",
+        "name": "Log Column",
+        "tab": "e2e13ec.547fec",
+        "order": 4,
+        "disp": false,
+        "width": "10"
+    },
+    {
+        "id": "6d325ab.5dedba4",
+        "type": "ui_group",
+        "z": "",
+        "name": "Title Column",
+        "tab": "e2e13ec.547fec",
+        "order": 1,
+        "disp": false,
+        "width": "3"
+    },
+    {
+        "id": "e2e13ec.547fec",
+        "type": "ui_tab",
+        "z": "",
+        "name": "Garage Door Status",
+        "icon": "dashboard"
+    }
+]
+
+
+Select Activate
