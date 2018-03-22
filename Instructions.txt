@@ -1,8 +1,10 @@
 Install Latest Raspian
 Boot to HDMI/Mouse/Keyboard
-Setup Wireless 
-run sudo apt-get install libavahi-compat-libdnssd-dev
-Open a browser and go to http://IPAddress/
+Setup Wireless
+Run raspi-config or GUI - Enable VNC and SSH - Set resolution to your preferred remote resolutio 1280* 720 works well 
+Update Node-red - Run sudo update-nodejs-and-nodered
+run Install Homekit pre-req: sudo apt-get install libavahi-compat-libdnssd-dev
+Open a browser and go to http://IPAddress:1880/
 When node-red opens select the hamburger in the upper right - select manage palette
 Select the install tab
 install node-red-contrib-homekit
@@ -10,11 +12,17 @@ Install node-red-dashboard
 
 import via hamburger -> Import- Clipboard ->New Flow
 Paste in the contents of PhatGarage-NodeRed
+Deploy
+Check the dasboard webpage
+http://IPAddress:1880/ui
+Clicking the buttons should flip the relays
 
+To add homekit support - Scan for devices
+It should find a door 1 and door 2 - Code for both is all 1s
+
+
+Once everything is up and running correctly
 To free up memory on a PI
-Enable VNC
-Enable SSH
-Disable everything else
-Enable Boot to CLI
+Change to Boot to CLI
 
 Now when your pi boots it will use less memory. If you need to remotely get in you can either SSH or SSH then raspi-config, change to VNC and then reboot and connect with VNC (somewhat the best of both worlds as you can remotely enable GUI.
