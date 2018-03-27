@@ -3,6 +3,7 @@ Boot to HDMI/Mouse/Keyboard
 Setup Wireless
 Run raspi-config or GUI - Enable VNC and SSH - Set resolution to your preferred remote resolutio 1280* 720 works well 
 Update Node-red - Run sudo update-nodejs-and-nodered
+Set to run as a service sudo systemctl enable nodered.service
 run Install Homekit pre-req: sudo apt-get install libavahi-compat-libdnssd-dev
 Open a browser and go to http://IPAddress:1880/
 When node-red opens select the hamburger in the upper right - select manage palette
